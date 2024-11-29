@@ -1,0 +1,228 @@
+import 'package:e_panchayat/model/growthModel.dart';
+import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+class Development extends StatefulWidget {
+  const Development({super.key});
+
+  @override
+  State<Development> createState() => _DevelopmentState();
+}
+
+class _DevelopmentState extends State<Development> {
+  // Example data for the projects
+  // final List<Map<String, dynamic>> projects = [
+  //   {
+  //     'title': 'Creation Of A New Source Of Drinking Water',
+  //     'id': '85436664',
+  //     'date': '2023-07-03',
+  //     'scheme': 'XV Finance Commission',
+  //     'activityType': 'New/Fresh',
+  //     'expenditure': 452863,
+  //     'estimatedCost': 1000000,
+  //     'startDate': '22 Aug 2022',
+  //     'endDate': '15 Nov 2024',
+  //     'progress': 0.75,
+  //     'status': 'Ongoing',
+  //   },
+  //   {
+  //     'title': 'Creation Of A New Source Of Drinking Water',
+  //     'id': '85436665',
+  //     'date': '2023-07-03',
+  //     'scheme': 'XV Finance Commission',
+  //     'activityType': 'New/Fresh',
+  //     'expenditure': 502863,
+  //     'estimatedCost': 600000,
+  //     'startDate': '22 Aug 2022',
+  //     'endDate': '15 Nov 2024',
+  //     'progress': 0.75,
+  //     'status': 'Ongoing',
+  //   },
+  //   {
+  //     'title': 'Grey Water Management - Treatment And Reuse Infrastructure',
+  //     'id': '85435869',
+  //     'date': '2023-07-03',
+  //     'scheme': 'XV Finance Commission',
+  //     'activityType': 'New/Fresh',
+  //     'expenditure': 300000,
+  //     'estimatedCost': 800000,
+  //     'startDate': '01 Sep 2022',
+  //     'endDate': '15 Nov 2024',
+  //     'progress': 1.0,
+  //     'status': 'Completed',
+  //   },
+  // ];
+
+  bool showOngoing =
+      true; // Controls whether "Ongoing" or "Completed" is displayed
+  bool isButtonClicked = false; // Controls if a toggle button has been clicked
+
+  List<Growthmodel> growthLists = [];
+
+  Future<void> getDataFromFirebase() async {
+    QuerySnapshot response =
+        await FirebaseFirestore.instance.collection("development_data").get();
+
+    for (var value in response.docs) {
+      // log("Scheme:${fundingScheme[index].scheme}",);
+      //log("Value:${value['schemes']['scheme']}");
+      growthLists.add(
+        Growthmodel(
+          title: value['title'],
+          id: value['id'],
+          date: value['date'],
+          scheme: value['scheme'],
+          activityType: value['activityType'],
+          expenditure: value['expenditure'],
+          estimatedCost: value['estimatedCost'],
+          startDate: value['startDate'],
+          endDate: value['endDate'],
+          progress: value['progress'],
+          status: value['status'],
+        ),
+      );
+    }
+    print("LENGTH OF scheme LIST:${growthLists.length}");
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    debugShowCheckedModeBanner:
+    false;
+    return Scaffold(
+      backgroundColor: Color.fromRGBO(229, 230, 248, 1),
+      appBar: AppBar(
+        title: Row(
+          children: [
+            Image.asset(
+              "assets/images/logo.png",
+              height: 100,
+              width: 50,
+            ),
+            const SizedBox(
+              width: 10,
+            ),
+            Text(
+              'e-Panchayat',
+              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 25),
+            ),
+            IconButton(
+              icon: const Icon(Icons.notifications),
+              onPressed: () async {
+                await getDataFromFirebase();
+              },
+            ),
+          ],
+        ),
+        backgroundColor: const Color.fromRGBO(0, 137, 123, 1),
+      ),
+      body: Column(
+        children: [
+          // Toggle buttons for Ongoing and Completed
+          const Padding(
+            padding: EdgeInsets.only(top: 10),
+            child: Text(
+              "Development (Construction) Works",
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+            ),
+          ),
+          const Divider(),
+
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: ToggleButtons(
+              isSelected: [showOngoing, !showOngoing],
+              onPressed: (int index) {
+                setState(() {
+                  showOngoing = index == 0;
+                  isButtonClicked =
+                      true; // Set to true when a button is clicked
+                });
+              },
+              color: Colors.black,
+              selectedColor: Colors.white,
+              fillColor: Color.fromRGBO(38, 166, 154, 1),
+              borderRadius: BorderRadius.circular(8),
+              children: const [
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Text(
+                    "Ongoing",
+                    style: TextStyle(fontSize: 15),
+                  ),
+                ),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Text("Completed", style: TextStyle(fontSize: 15)),
+                ),
+              ],
+            ),
+          ),
+          // Show ListView only after a toggle button is clicked
+          if (isButtonClicked)
+            Expanded(
+              child: ListView.builder(
+                itemCount: growthLists.length,
+                itemBuilder: (context, index) {
+                  if ((showOngoing && growthLists[index].status == 'Ongoing') ||
+                      (!showOngoing &&
+                          growthLists[index].status == 'Completed')) {
+                    return Card(
+                      margin: const EdgeInsets.all(10),
+                      child: Padding(
+                        padding: const EdgeInsets.all(10),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "${growthLists[index].title} ${growthLists[index].id}",
+                              style: const TextStyle(
+                                  fontSize: 16, fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(height: 5),
+                            const Text("Onset of work"),
+                            Text("Registered on : ${growthLists[index].date}",
+                                style: TextStyle(color: Colors.black)),
+                            Text("Scheme : ${growthLists[index].scheme}",
+                                style: TextStyle(color: Colors.black)),
+                            Text(
+                                "Activity Type : ${growthLists[index].activityType}",
+                                style: TextStyle(color: Colors.black)),
+                            const SizedBox(height: 5),
+                            Text(
+                                "Expenditure : ₹ ${growthLists[index].expenditure}"),
+                            Text(
+                                "Estimated Cost : ₹ ${growthLists[index].estimatedCost}"),
+                            const SizedBox(height: 10),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                    "${growthLists[index].startDate} - ${growthLists[index].endDate}"),
+                                const Icon(
+                                    Icons.star_border), // For review or rating
+                              ],
+                            ),
+                            SizedBox(height: 5),
+                            LinearProgressIndicator(
+                              value: growthLists[index].progress,
+                              backgroundColor: Colors.grey[300],
+                              color: Colors.green,
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  } else {
+                    return const SizedBox
+                        .shrink(); // Returns an empty widget if status does not match
+                  }
+                },
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "284416909106",
+    "project_id": "e-panchayat-f7aec",
+    "storage_bucket": "e-panchayat-f7aec.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:284416909106:android:6bbd18e5afc0b26250c12b",
+        "android_client_info": {
+          "package_name": "com.example.e_panchayat"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA4jaATo2vleUYUDye-4eDgQmVMQGsfm4E"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

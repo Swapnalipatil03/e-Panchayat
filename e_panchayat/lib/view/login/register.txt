@@ -1,0 +1,288 @@
+import 'package:flutter/material.dart';
+import 'package:animated_text_kit/animated_text_kit.dart';
+import 'package:e_panchayat/view/login/login.dart';
+
+class RegistrationPage extends StatefulWidget {
+  const RegistrationPage({super.key});
+
+  @override
+  State createState() => _RegistrationPageState();
+}
+
+class _RegistrationPageState extends State<RegistrationPage>
+    with SingleTickerProviderStateMixin {
+  int currentStep = 0;
+  final int totalSteps = 3;
+  late AnimationController _animationController;
+  late Animation<double> _buttonWidthAnimation;
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    );
+
+    _buttonWidthAnimation = Tween<double>(begin: 200, end: 60).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _onRegisterPressed() async {
+    setState(() {
+      _isLoading = true; // Start loading animation
+    });
+
+    // Start shrinking the button
+    await _animationController.forward();
+
+    // Simulate a loading process
+    await Future.delayed(const Duration(seconds: 2));
+
+    // Navigate to the login page
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const Login()),
+    );
+
+    // Revert the button animation after navigation
+    await _animationController.reverse();
+
+    setState(() {
+      _isLoading = false;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+
+    return Scaffold(
+      body: SingleChildScrollView(
+        child: Container(
+          width: double.infinity,
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Color.fromRGBO(92, 185, 222, 1),
+                Color.fromRGBO(115, 235, 170, 1),
+              ],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          ),
+          child: Column(
+            children: [
+              ClipPath(
+                clipper: UShapeClipper(),
+                child: Container(
+                  height: size.height * 0.35,
+                  width: double.infinity,
+                  color: Colors.black,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // Text Animation for "e-Panchayat"
+                      AnimatedTextKit(
+                        animatedTexts: [
+                          TypewriterAnimatedText(
+                            'e-Panchayat',
+                            speed: const Duration(milliseconds: 150),
+                            textStyle: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 40,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                        totalRepeatCount: 1,
+                        displayFullTextOnTap: true,
+                        stopPauseOnTap: true,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              Image.asset(
+                "assets/images/emblem.png",
+                height: 90,
+                width: 90,
+              ),
+              // "Register" text above steps
+              Padding(
+                padding: EdgeInsets.symmetric(
+                  vertical: size.height * 0.02, // Reduced space above and below
+                ),
+                child: const Text(
+                  'Register',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
+                ),
+              ),
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: size.width * 0.05),
+                child: Stepper(
+                  currentStep: currentStep,
+                  onStepContinue: () {
+                    if (currentStep < totalSteps - 1) {
+                      setState(() {
+                        currentStep += 1;
+                      });
+                    }
+                  },
+                  onStepCancel: () {
+                    if (currentStep > 0) {
+                      setState(() {
+                        currentStep -= 1;
+                      });
+                    }
+                  },
+                  steps: [
+                    Step(
+                      title: const Text(
+                        'Step 1: Personal Info',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      content: Column(
+                        children: [
+                          TextField(
+                            decoration: InputDecoration(
+                              labelText: 'Enter Full Name',
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                          ),
+                          SizedBox(height: size.height * 0.02),
+                          TextField(
+                            decoration: InputDecoration(
+                              labelText: 'Enter Phone Number',
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                            keyboardType: TextInputType.phone,
+                          ),
+                        ],
+                      ),
+                    ),
+                    Step(
+                      title: const Text(
+                        'Step 2: Email',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      content: TextField(
+                        decoration: InputDecoration(
+                          labelText: 'Enter Email',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        keyboardType: TextInputType.emailAddress,
+                      ),
+                    ),
+                    Step(
+                      title: const Text(
+                        'Step 3: Password',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      content: Column(
+                        children: [
+                          TextField(
+                            obscureText: true,
+                            decoration: InputDecoration(
+                              labelText: 'Enter New Password',
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                          ),
+                          SizedBox(height: size.height * 0.02),
+                          TextField(
+                            obscureText: true,
+                            decoration: InputDecoration(
+                              labelText: 'Confirm Password',
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+              Center(
+                child: AnimatedBuilder(
+                  animation: _buttonWidthAnimation,
+                  builder: (context, child) {
+                    return GestureDetector(
+                      onTap: _isLoading ? null : _onRegisterPressed,
+                      child: Container(
+                        width: _buttonWidthAnimation.value,
+                        height: size.height * 0.06,
+                        decoration: BoxDecoration(
+                          color: Colors.blue,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        alignment: Alignment.center,
+                        child: _isLoading
+                            ? const CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              )
+                            : const Text(
+                                "Register",
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  color: Colors.white,
+                                ),
+                              ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              SizedBox(height: size.height * 0.02),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class UShapeClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    final Path path = Path();
+    path.lineTo(0, size.height - 100);
+    path.quadraticBezierTo(
+      size.width / 2,
+      size.height,
+      size.width,
+      size.height - 100,
+    );
+    path.lineTo(size.width, 0);
+    path.close();
+    return path;
+  }
+
+  @override
+  bool shouldReclip(covariant CustomClipper<Path> oldClipper) {
+    return false;
+  }
+}

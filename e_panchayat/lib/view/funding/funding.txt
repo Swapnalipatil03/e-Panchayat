@@ -1,0 +1,288 @@
+import 'dart:developer';
+
+import 'package:e_panchayat/model/fundingModel.dart';
+import 'package:flutter/material.dart';
+import 'package:fl_chart/fl_chart.dart';
+import '../../model/funding_pie_chart.dart';
+import '../../model/funding_data.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+// void main() async {
+//   WidgetsFlutterBinding.ensureInitialized();
+//   await Firebase.initializeApp(); // Initialize Firebase
+//   runApp(const MainApp());
+// }
+
+// class MainApp extends StatelessWidget {
+//   const MainApp({super.key});
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return const MaterialApp(
+//       home: Funding(),
+//       debugShowCheckedModeBanner: false,
+//     );
+//   }
+// }
+
+class Funding extends StatefulWidget {
+  const Funding({super.key});
+  @override
+  State createState() => _Funding();
+}
+
+class _Funding extends State<Funding> with SingleTickerProviderStateMixin {
+  late AnimationController _animationController;
+  late Animation<double> _animation;
+
+  // Track the selected section
+  String selectedSection = "Govt. of India";
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    );
+    _animation = Tween<double>(begin: 0, end: 1).animate(_animationController)
+      ..addListener(() {
+        setState(() {});
+      });
+    _animationController.forward();
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  Future<void> getDataFromFirebase() async {
+    log("in");
+    QuerySnapshot response =
+        await FirebaseFirestore.instance.collection("funding_data").get();
+
+    for (var value in response.docs) {
+      // log("Scheme:${fundingScheme[index].scheme}",);
+      //  log("Value:${value['schemes']}");
+      
+      fundingScheme.add(
+        Fundingmodel(
+            scheme: value['schemes'][0]["scheme"],
+            component: "",
+            expected: "",
+            reverted: "",
+            expenditure: ""),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color.fromRGBO(245, 245, 245, 1),
+      appBar: AppBar(
+        backgroundColor: const Color.fromRGBO(0, 137, 123, 1),
+        title: Row(
+          children: [
+            Image.asset(
+              "assets/images/logo.png",
+              height: 100,
+              width: 50,
+            ),
+            const SizedBox(
+              width: 10,
+            ),
+            Text(
+              'e-Panchayat',
+              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 25),
+            ),
+          ],
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.notifications),
+            onPressed: () async {
+              await getDataFromFirebase();
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.search),
+            onPressed: () {},
+          ),
+        ],
+      ),
+      body: ListView(
+        padding: const EdgeInsets.only(left: 16.0, right: 16.0, bottom: 16.0),
+        children: [
+          // Pie chart section
+          const SizedBox(height: 5),
+          Center(
+            child: Column(
+              children: [
+                const Text(
+                  "Funding Distribution",
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 20),
+                SizedBox(
+                  height: 200,
+                  child: PieChart(
+                    PieChartData(
+                      sections: FundingPieChart.buildSections(_animation.value),
+                      sectionsSpace: 2,
+                      centerSpaceRadius: 70,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 30),
+
+          // Scheme-wise Fund Receipt & Expenditure
+          const Text(
+            "Scheme-wise Fund Receipt & Expenditure",
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              ElevatedButton(
+                onPressed: () {
+                  setState(() {
+                    selectedSection = "Govt. of India";
+                  });
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: selectedSection == "Govt. of India"
+                      ? Color.fromRGBO(38, 166, 154, 1)
+                      : Colors.white,
+                ),
+                child: Text("Govt. of India",
+                    style: TextStyle(
+                        color: selectedSection == "Govt. of India"
+                            ? Colors.white
+                            : Colors.black)),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  setState(() {
+                    selectedSection = "State Govt.";
+                  });
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: selectedSection == "State Govt."
+                      ? Color.fromRGBO(38, 166, 154, 1)
+                      : Colors.white,
+                ),
+                child: Text("State Govt.",
+                    style: TextStyle(
+                        color: selectedSection == "State Govt."
+                            ? Colors.white
+                            : Colors.black)),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  setState(() {
+                    selectedSection = "Other";
+                  });
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: selectedSection == "Other"
+                      ? Color.fromRGBO(38, 166, 154, 1)
+                      : Colors.white,
+                ),
+                child: Text("Other",
+                    style: TextStyle(
+                        color: selectedSection == "Other"
+                            ? Colors.white
+                            : Colors.black)),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          // List of Scheme Cards
+          ListView.builder(
+              physics: const NeverScrollableScrollPhysics(),
+              shrinkWrap: true,
+              itemCount: fundingScheme.length,
+              itemBuilder: (context, index) {
+                // final fundingsc =
+                //     getListlForSelectedSection(selectedSection)[index];
+
+                return Card(
+                  elevation: 2,
+                  margin: const EdgeInsets.symmetric(vertical: 8),
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        Text(
+                          "Scheme:${fundingScheme[index].scheme}",
+                          style: const TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 16),
+                        ),
+                        const SizedBox(
+                          height: 5,
+                        ),
+                        Text(
+                          "Component:${fundingScheme[index].component}",
+                          style: const TextStyle(color: Colors.black),
+                        ),
+                        Text(
+                          "Expected:${fundingScheme[index].expected}",
+                          style: const TextStyle(color: Colors.black),
+                        ),
+                        Text(
+                          "Reverted:${fundingScheme[index].reverted}",
+                          style: const TextStyle(color: Colors.black),
+                        ),
+                        Text(
+                          "Expenditure:${fundingScheme[index].expenditure}",
+                          style: const TextStyle(color: Colors.black),
+                        ),
+                        const Divider(),
+                        // _buildInfoRow("Scheme:${fundingScheme[index].scheme}",),
+                        // _buildInfoRow(
+                        //     "Actual Fund Received", scheme["received"]!),
+                        // _buildInfoRow(
+                        //     "Reverted / Surrendered Fund", scheme["reverted"]!),
+                        // _buildInfoRow(
+                        //     "Actual Expenditure", scheme["expenditure"]!,
+                        //     highlight: true),
+                      ],
+                    ),
+                  ),
+                );
+              })
+        ],
+      ),
+    );
+  }
+}
+
+Widget _buildInfoRow(String label, String value, {bool highlight = false}) {
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: 4.0),
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(label, style: const TextStyle(color: Colors.black)),
+        Text(
+          value,
+          style: TextStyle(
+            color: highlight ? Colors.red : Colors.black,
+            fontWeight: highlight ? FontWeight.bold : FontWeight.normal,
+          ),
+        ),
+      ],
+    ),
+  );
+}
